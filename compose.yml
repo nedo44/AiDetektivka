@@ -24,8 +24,8 @@ services:
       - POSTGRES_DB=detektivka
       - PGDATA=/data/pgdata
     volumes:
-      - ./data/pgdata:/data/pgdata
-      - ./data:/data
+      - pgdata:/data/pgdata
+      - data:/data
     networks:
       - detektivka_net
     healthcheck:
@@ -37,3 +37,7 @@ services:
 networks:
   detektivka_net:
     driver: bridge
+
+volumes:
+  pgdata:
+  data:
