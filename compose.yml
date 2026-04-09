@@ -13,8 +13,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./data:/data
     networks:
       - detektivka_net
 
