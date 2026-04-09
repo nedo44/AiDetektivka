@@ -10,6 +10,7 @@ import httpx
 import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Text, create_engine
@@ -102,7 +103,7 @@ with prompts_path.open("r", encoding="utf-8") as f:
 hidden_murderer_id = "2"
 
 redis_client = redis.from_url(REDIS_URL, decode_responses=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 async def seed_suspects():
     async with async_session() as session:
@@ -211,6 +212,11 @@ def get_suspect(character_id: str) -> Dict[str, str]:
     if suspect is None:
         raise HTTPException(status_code=404, detail="Postava nenalezena")
     return suspect
+
+
+@app.get("/")
+async def root():
+    return FileResponse("index.html")
 
 
 @app.post("/chat")

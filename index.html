@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nekonečná detektivka</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Courier New', 'Special Elite', monospace;
+      background: linear-gradient(135deg, #1a0f09 0%, #2c1810 25%, #3d2516 50%, #2c1810 75%, #1a0f09 100%);
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(69, 43, 23, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(49, 33, 19, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(92, 51, 23, 0.15) 0%, transparent 70%),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><defs><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise" seed="2"/></filter></defs><rect width="200" height="200" fill="%232c1810" filter="url(%23noise)"/><circle cx="100" cy="100" r="1" fill="%233d2516" opacity="0.15"/><circle cx="50" cy="30" r="0.8" fill="%233d2516" opacity="0.1"/><circle cx="170" cy="150" r="0.6" fill="%233d2516" opacity="0.12"/></svg>');
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 5px,
+          rgba(0, 0, 0, 0.03) 5px,
+          rgba(0, 0, 0, 0.03) 6px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 5px,
+          rgba(0, 0, 0, 0.02) 5px,
+          rgba(0, 0, 0, 0.02) 6px
+        );
+      pointer-events: none;
+    }
+
+    .case-file {
+      width: min(1500px, 95vw);
+      height: 90vh;
+      max-height: 90vh;
+      background: #e3c18d;
+      border: 4px solid #b8956a;
+      box-shadow: 
+        0 0 0 12px rgba(184, 149, 106, 0.5),
+        0 40px 100px rgba(0, 0, 0, 0.9),
+        inset 0 0 60px rgba(0, 0, 0, 0.15),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3),
+        0 0 80px rgba(184, 149, 106, 0.4);
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+      transform: none;
+      border-radius: 0;
+      clip-path: polygon(0 0, 96% 0, 100% 4%, 100% 96%, 96% 100%, 4% 100%, 0 96%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .case-file::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 40px;
+      background: linear-gradient(180deg, #888 0%, #666 10%, #555 50%, #444 90%, #333 100%);
+      clip-path: polygon(10% 0%, 90% 0%, 95% 50%, 90% 100%, 10% 100%, 5% 50%);
+      box-shadow: 
+        inset -2px -2px 4px rgba(255, 255, 255, 0.2),
+        inset 2px 2px 4px rgba(0, 0, 0, 0.5),
+        0 4px 8px rgba(0, 0, 0, 0.4);
+      z-index: 10;
+    }
+
+    .case-file::after {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 6px;
+      background: linear-gradient(90deg, #888 0%, #aaa 30%, #888 70%, #666 100%);
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+      z-index: 11;
+    }
+
+    .case-file > .stamp {
+      display: none;
+    }
+
+    .autopsy-button {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #dc143c;
+      color: #fffef0;
+      border: 2px solid #8b0000;
+      padding: 10px 16px;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-family: 'Courier New', 'Special Elite', monospace;
+      font-size: 0.85em;
+      border-radius: 3px;
+      font-weight: bold;
+      transform: none;
+      box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.15),
+        3px 3px 0 rgba(0, 0, 0, 0.18);
+      transition: all 0.3s ease;
+      letter-spacing: 0.08em;
+      z-index: 20;
+      pointer-events: auto;
+    }
+
+    .autopsy-button:hover {
+      background: #ff1a47;
+      transform: translateY(-2px);
+      box-shadow: 
+        0 0 0 3px rgba(220, 20, 60, 0.35),
+        5px 5px 0 rgba(0, 0, 0, 0.18),
+        8px 8px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    .autopsy-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+      padding: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .autopsy-content {
+      background: #fffef0;
+      border: 2px solid #8b4513;
+      padding: 30px;
+      max-width: 500px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      line-height: 1.5;
+      position: relative;
+      transform: none;
+      box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 15px rgba(0, 0, 0, 0.05),
+        inset 1px 1px 0 rgba(255, 255, 255, 0.6);
+      clip-path: polygon(0 0, 97% 0, 100% 3%, 100% 97%, 97% 100%, 3% 100%, 0 97%);
+      transition: transform 0.3s ease;
+      margin: 20px auto;
+    }
+
+    .autopsy-content:hover {
+      transform: none;
+    }
+
+    .autopsy-content::before {
+      content: '';
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-20deg);
+      width: 100px;
+      height: 30px;
+      background: linear-gradient(135deg, #444 0%, #666 50%, #555 100%);
+      clip-path: polygon(15% 10%, 85% 10%, 95% 40%, 95% 90%, 85% 95%, 15% 95%, 5% 90%, 5% 40%);
+      box-shadow: 
+        inset -1px -1px 3px rgba(0, 0, 0, 0.4),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.2),
+        -3px 3px 6px rgba(0, 0, 0, 0.5);
+      z-index: 3;
+    }
+
+    .autopsy-content::after {
+      content: 'PŘÍSNĚ\ATAJNA';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-15deg);
+      font-size: 3.5em;
+      color: rgba(220, 20, 60, 0.12);
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      pointer-events: none;
+      z-index: 1;
+      white-space: pre;
+      line-height: 1.1;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    .autopsy-header {
+      text-align: center;
+      border-bottom: 2px solid #8b4513;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+      font-family: 'Courier New', 'Special Elite', monospace;
+      letter-spacing: 0.1em;
+      color: #2c1810;
+    }
+
+    .autopsy-stamp {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 70px;
+      height: 70px;
+      background: radial-gradient(circle at 30% 30%, #ff4444 0%, #dc143c 40%, #8b0000 90%, #660000 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fffef0;
+      font-size: 0.65em;
+      font-weight: bold;
+      text-transform: uppercase;
+      transform: rotate(20deg);
+      z-index: 2;
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.3),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.2);
+      text-align: center;
+      padding: 5px;
+      line-height: 1.2;
+      letter-spacing: 0.05em;
+    }
+
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #8b4513;
+      color: #fffef0;
+      border: 2px solid #654321;
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+      font-size: 1.4em;
+      z-index: 3;
+      border-radius: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      transform: none;
+      transition: all 0.2s ease;
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .close-button:hover {
+      background: #2c1810;
+      transform: scale(1.1);
+      box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .autopsy-content p {
+      margin: 10px 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .autopsy-content::before {
+      content: '📎';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2em;
+      color: #654321;
+      z-index: 3;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+      border-bottom: 3px solid #654321;
+      padding-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      color: #2c1810;
+      font-size: 2.5em;
+      text-shadow: 
+        2px 2px 0 rgba(0, 0, 0, 0.1),
+        3px 3px 6px rgba(0, 0, 0, 0.2);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-family: 'Courier New', 'Special Elite', monospace;
+      line-height: 1;
+      font-weight: bold;
+    }
+
+    .case-info {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0 0 0;
+      gap: 12px;
+      font-size: 0.8em;
+      color: #654321;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'Courier New', monospace;
+      flex-wrap: wrap;
+    }
+
+    .suspects-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 25px;
+      border-bottom: 2px solid #8b4513;
+      padding-bottom: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .suspects-header::before {
+      content: '📋';
+      margin-right: 15px;
+      font-size: 2em;
+    }
+
+    .suspects-header h2 {
+      margin: 0;
+      color: #2c1810;
+      font-size: 1.3em;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: 'Courier New', 'Special Elite', monospace;
+      font-weight: bold;
+    }
+
+    .layout {
+      display: flex;
+      gap: 24px;
+      position: relative;
+      z-index: 2;
+      min-height: 0;
+      margin-bottom: 10px;
+      flex: 1 1 auto;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(101, 69, 33, 0.2);
+      padding: 18px;
+      box-sizing: border-box;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      border-radius: 0;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel:first-child {
+      flex: 0 0 25%;
+      max-width: 280px;
+      min-width: 220px;
+      align-self: stretch;
+      overflow: hidden;
+    }
+
+    .panel.chat-window {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .suspect-item {
+      position: relative;
+      margin-bottom: 10px;
+      padding: 14px;
+      border: 1px dashed rgba(101, 69, 33, 0.25);
+      background: #fffef0;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      overflow: hidden;
+      border-radius: 0;
+      font-family: 'Courier New', monospace;
+    }
+
+    .suspect-item:hover, .suspect-item.selected {
+      background: #f0e68c;
+      transform: translateX(4px);
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.08), 6px 6px 12px rgba(0, 0, 0, 0.15);
+      border-color: #654321;
+    }
+
+    .suspect-item.selected::before {
+      content: '👤';
+      position: absolute;
+      left: -30px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.5em;
+    }
+
+    .suspect-name {
+      font-weight: bold;
+      color: #2c1810;
+      margin-bottom: 8px;
+      font-size: 1.1em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .suspect-role {
+      color: #654321;
+      font-style: italic;
+      font-size: 0.95em;
+    }
+
+    .suspend-item::after {
+      content: '';
+      position: absolute;
+      top: -8px;
+      right: 15px;
+      width: 70px;
+      height: 15px;
+      background: linear-gradient(90deg, #ffeb99 0%, #ffe680 50%, #ffdb4d 100%);
+      border: 1px solid #cc9900;
+      transform: rotate(-3deg);
+      z-index: -1;
+    }
+
+    .chat-window {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 0;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chat-window::before {
+      content: '';
+      position: absolute;
+      top: -22px;
+      left: 60px;
+      width: 90px;
+      height: 25px;
+      background: linear-gradient(135deg, #555 0%, #888 40%, #666 60%, #444 100%);
+      clip-path: polygon(20% 0%, 80% 0%, 90% 50%, 80% 100%, 20% 100%, 10% 50%);
+      box-shadow: 
+        inset -1px -1px 2px rgba(0, 0, 0, 0.5),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.15),
+        -2px 2px 5px rgba(0, 0, 0, 0.4);
+      z-index: 3;
+    }
+
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #8b4513;
+      padding-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .selected-suspect {
+      font-weight: bold;
+      color: #2c1810;
+      font-size: 1em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .messages {
+      flex: 1 1 70%;
+      overflow-y: auto;
+      padding: 18px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(101, 69, 33, 0.15);
+      background: rgba(255, 255, 240, 0.98);
+      line-height: 1.6;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      box-shadow: 
+        inset 0 0 10px rgba(0, 0, 0, 0.08);
+      position: relative;
+      z-index: 1;
+      min-height: 0;
+    }
+
+    .messages::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 35px,
+          rgba(139, 69, 19, 0.02) 35px,
+          rgba(139, 69, 19, 0.02) 36px
+        ),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><filter id="linen"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="5" result="noise"/></filter></defs><rect width="300" height="300" fill="%23fffef0" filter="url(%23linen)" opacity="0.03"/></svg>');
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .message {
+      margin-bottom: 18px;
+      padding: 14px;
+      border-left: 5px solid #8b4513;
+      background: rgba(0, 0, 0, 0.02);
+      position: relative;
+      z-index: 2;
+      border-radius: 2px;
+    }
+
+    .message::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: -8px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid #8b4513;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+    }
+
+    .message.user {
+      border-left-color: #000080;
+      background: rgba(0, 0, 128, 0.08);
+      font-style: italic;
+      color: #000080;
+      font-weight: 500;
+      font-family: 'Courier New', 'Lucida Console', monospace;
+      letter-spacing: 0.3px;
+    }
+
+    .message.suspect {
+      border-left-color: #000000;
+      background: rgba(0, 0, 0, 0.04);
+      color: #000000;
+      font-family: 'Courier New', monospace;
+      font-weight: normal;
+    }
+
+    .message-label {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      font-family: 'Courier New', 'Special Elite', monospace;
+    }
+
+    .message.user .message-label {
+      color: #000080;
+    }
+
+    .message.suspect .message-label {
+      color: #000000;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 90px;
+      max-height: 120px;
+      border: none;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.35);
+      background: transparent;
+      color: #2c1810;
+      padding: 10px 8px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      resize: none;
+      box-shadow: none;
+      position: relative;
+      z-index: 1;
+      outline: none;
+      border-radius: 0;
+      background-image: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 23px,
+          rgba(139, 69, 19, 0.03) 23px,
+          rgba(139, 69, 19, 0.03) 24px
+        );
+    }
+
+    textarea::placeholder {
+      color: #999;
+      font-style: italic;
+    }
+
+    button {
+      border: 3px solid #8b4513;
+      background: #f4f1e8;
+      color: #2c1810;
+      padding: 10px 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.85em;
+      font-family: 'Courier New', 'Special Elite', monospace;
+      position: relative;
+      overflow: hidden;
+      transform: none;
+      border-radius: 3px;
+      clip-path: polygon(0 0, 97% 0, 100% 3%, 100% 97%, 97% 100%, 3% 100%, 0 97%);
+      box-shadow: 
+        inset 0 1px 2px rgba(0, 0, 0, 0.12),
+        3px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(139, 69, 19, 0.15), transparent);
+      transition: left 0.5s;
+    }
+
+    button:hover::before {
+      left: 100%;
+    }
+
+    button:hover {
+      background: #e8e5d0;
+      color: #2c1810;
+      transform: translateY(-4px);
+      box-shadow: 
+        5px 5px 0 rgba(0, 0, 0, 0.12),
+        8px 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    button:active {
+      transform: translateY(-1px);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-top: 12px;
+      justify-content: flex-start;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 1em;
+      color: #654321;
+      font-style: italic;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    #accuseButton {
+      background: #dc143c !important;
+      color: #fffef0 !important;
+      border-color: #8b0000 !important;
+      border-radius: 3px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    #accuseButton:hover {
+      background: #ff1a47 !important;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.85em;
+      color: #654321;
+      opacity: 0.75;
+      font-style: italic;
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid rgba(101, 69, 33, 0.3);
+      padding-top: 15px;
+      font-family: 'Courier New', monospace;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        flex-direction: column;
+        gap: 30px;
+      }
+      h1 {
+        font-size: 2em;
+      }
+      .case-file {
+        padding: 30px 40px 40px 40px;
+      }
+    }
+
+    /* ===== MOBILE RESPONSIVE DESIGN (768px and below) ===== */
+    @media (max-width: 768px) {
+      /* Body: Adjust padding for mobile */
+      body {
+        padding: 8px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        min-height: 100vh;
+      }
+
+      /* Case file: Full width, minimal padding to maximize space */
+      .case-file {
+        width: 100%;
+        height: auto;
+        max-height: none;
+        padding: 12px 8px;
+        flex-direction: column;
+        justify-content: flex-start;
+        clip-path: none;
+        border-radius: 6px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        border: 2px solid #b8956a;
+        margin: 0;
+        gap: 0;
+      }
+
+      /* Hide folder decoration on mobile */
+      .case-file::before,
+      .case-file::after {
+        display: none;
+      }
+
+      /* Autopsy button: Moved to top, full width */
+      .autopsy-button {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        width: 100%;
+        min-height: 44px;
+        padding: 12px 14px;
+        font-size: 0.9em;
+        margin: 0 0 16px 0;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .autopsy-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Header: Responsive typography with proper spacing */
+      .header {
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #654321;
+      }
+
+      h1 {
+        font-size: 1.5em;
+        margin: 6px 0 8px 0;
+        line-height: 1.2;
+      }
+
+      .case-info {
+        font-size: 0.65em;
+        gap: 10px;
+        margin: 10px 0 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        row-gap: 4px;
+      }
+
+      .label {
+        display: none;
+      }
+
+      /* Layout: Column for mobile */
+      .layout {
+        flex-direction: column;
+        gap: 0;
+        height: auto;
+        min-height: auto;
+        margin-bottom: 0;
+        flex: 1 1 auto;
+      }
+
+      /* Panels: Full width with proper spacing */
+      .panel {
+        flex: 1 1 auto;
+        padding: 14px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 100%;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 16px;
+        box-sizing: border-box;
+      }
+
+      /* Suspects panel: Horizontal scrollable list */
+      .panel:first-child {
+        flex: 0 0 auto;
+        max-width: 100%;
+        min-width: 100%;
+        align-self: auto;
+        margin-bottom: 16px;
+      }
+
+      .suspects-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #654321;
+        gap: 8px;
+      }
+
+      .suspects-header::before {
+        margin: 0;
+        font-size: 1.3em;
+        flex-shrink: 0;
+      }
+
+      .suspects-header h2 {
+        font-size: 1.05em;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+
+      /* Suspects list: Horizontal scrollable on mobile, compact */
+      #suspectList {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 6px;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+      }
+
+      #suspectList::-webkit-scrollbar {
+        height: 5px;
+      }
+
+      #suspectList::-webkit-scrollbar-track {
+        background: rgba(139, 69, 19, 0.08);
+        border-radius: 10px;
+      }
+
+      #suspectList::-webkit-scrollbar-thumb {
+        background: rgba(139, 69, 19, 0.3);
+        border-radius: 10px;
+      }
+
+      #suspectList::-webkit-scrollbar-thumb:hover {
+        background: rgba(139, 69, 19, 0.5);
+      }
+
+      /* Suspect items: Inline, compact */
+      .suspect-item {
+        flex: 0 0 auto;
+        min-width: 130px;
+        max-width: 130px;
+        padding: 10px 8px;
+        margin-bottom: 0;
+        border: 1px solid rgba(101, 69, 33, 0.25);
+        background: #fffef0;
+        white-space: normal;
+        word-break: break-word;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+      }
+
+      .suspect-item:hover,
+      .suspect-item.selected {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        background: #f0e68c;
+        border-color: #654321;
+      }
+
+      .suspect-name {
+        font-size: 0.9em;
+        margin-bottom: 0;
+        font-weight: bold;
+        color: #2c1810;
+      }
+
+      .suspect-role {
+        font-size: 0.78em;
+        color: #654321;
+        font-style: italic;
+      }
+
+      /* Chat window: Full width and height */
+      .panel.chat-window {
+        flex: 1 1 auto;
+        height: auto;
+        min-height: 380px;
+        display: flex;
+        flex-direction: column;
+        padding: 14px;
+      }
+
+      .chat-header {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #8b4513;
+      }
+
+      .chat-header .label {
+        display: none;
+      }
+
+      .selected-suspect {
+        font-size: 0.9em;
+        color: #2c1810;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      /* Hide chat window decoration on mobile */
+      .chat-window::before {
+        display: none;
+      }
+
+      /* Messages: Scrollable with padding */
+      .messages {
+        flex: 1 1 auto;
+        min-height: 180px;
+        max-height: 380px;
+        overflow-y: auto;
+        padding: 12px;
+        margin-bottom: 14px;
+        font-size: 0.87em;
+        background: rgba(255, 255, 240, 0.98);
+        border: 1px solid rgba(101, 69, 33, 0.15);
+      }
+
+      /* Text input: Larger for touch */
+      textarea {
+        min-height: 100px;
+        max-height: 140px;
+        font-size: 16px;
+        padding: 12px;
+        border: 1px solid #8b4513;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        background: transparent;
+        color: #2c1810;
+        font-family: 'Courier New', monospace;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      textarea::placeholder {
+        font-size: 14px;
+        color: #999;
+      }
+
+      /* Action buttons: Full width with proper gap */
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        align-items: stretch;
+        margin-top: 0;
+        margin-bottom: 12px;
+      }
+
+      button {
+        min-height: 44px;
+        padding: 12px 14px;
+        font-size: 0.88em;
+        border-radius: 4px;
+        clip-path: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        width: 100%;
+        margin: 0;
+        border: 2px solid #8b4513;
+        background: #f4f1e8;
+        color: #2c1810;
+        font-family: 'Courier New', 'Special Elite', monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      #sendButton {
+        background: #f4f1e8;
+        border: 2px solid #8b4513;
+        color: #2c1810;
+      }
+
+      #sendButton:hover {
+        background: #e8e5d0;
+      }
+
+      #accuseButton {
+        background: #dc143c !important;
+        color: #fffef0 !important;
+        border: 2px solid #8b0000 !important;
+        grid-column: auto;
+      }
+
+      #accuseButton:hover {
+        background: #ff1a47 !important;
+      }
+
+      /* Status message */
+      .status {
+        margin-top: 8px;
+        font-size: 0.8em;
+        padding: 8px 10px;
+        background: rgba(139, 69, 19, 0.08);
+        border-left: 3px solid #654321;
+        border-radius: 2px;
+        font-style: italic;
+        color: #654321;
+      }
+
+      /* Footer: Responsive */
+      .footer {
+        margin-top: 16px;
+        font-size: 0.78em;
+        padding-top: 12px;
+        border-top: 1px solid rgba(101, 69, 33, 0.2);
+        text-align: center;
+        color: #654321;
+        opacity: 0.8;
+      }
+
+      /* Autopsy modal: Full mobile view with proper z-index */
+      .autopsy-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 2000 !important;
+        padding: 10px;
+        justify-content: center;
+        align-items: flex-start;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .autopsy-content {
+        background: #fffef0;
+        border: 2px solid #8b4513;
+        max-width: 100%;
+        width: 100%;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        padding: 18px;
+        font-size: 0.84em;
+        line-height: 1.5;
+        border-radius: 4px;
+        clip-path: none;
+        position: relative;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+      }
+
+      .autopsy-content::before {
+        display: none !important;
+      }
+
+      .autopsy-header {
+        font-size: 1.05em;
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+        border-bottom: 2px solid #8b4513;
+        text-align: center;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .autopsy-content p {
+        margin: 10px 0;
+        line-height: 1.5;
+      }
+
+      .autopsy-stamp {
+        width: 50px;
+        height: 50px;
+        font-size: 0.55em;
+        top: 8px;
+        right: 8px;
+        position: absolute;
+      }
+
+      /* Close button: Larger for touch */
+      .close-button {
+        width: 44px;
+        height: 44px;
+        min-height: 44px;
+        min-width: 44px;
+        font-size: 1.8em;
+        top: 6px;
+        right: 6px;
+        padding: 0;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #8b4513;
+        color: #fffef0;
+        border: 2px solid #654321;
+        cursor: pointer;
+        z-index: 2001;
+        transition: all 0.2s ease;
+      }
+
+      .close-button:hover {
+        background: #2c1810;
+        transform: scale(1.1);
+      }
+
+      /* Message styling for mobile */
+      .message {
+        padding: 10px;
+        margin-bottom: 12px;
+        border-left: 4px solid #8b4513;
+        font-size: 0.87em;
+        background: rgba(0, 0, 0, 0.02);
+      }
+
+      .message-label {
+        font-size: 0.8em;
+        margin-bottom: 6px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+    }
+
+    /* Extra small phones (360px and below) */
+    @media (max-width: 480px) {
+      body {
+        padding: 6px;
+      }
+
+      .case-file {
+        padding: 10px 6px;
+      }
+
+      h1 {
+        font-size: 1.3em;
+        margin: 4px 0 6px 0;
+      }
+
+      .case-info {
+        font-size: 0.62em;
+        gap: 8px;
+      }
+
+      .panel {
+        padding: 10px;
+        margin-bottom: 12px;
+      }
+
+      .panel:first-child {
+        margin-bottom: 12px;
+      }
+
+      .suspects-header h2 {
+        font-size: 0.95em;
+      }
+
+      .suspect-item {
+        min-width: 110px;
+        max-width: 110px;
+        padding: 8px;
+        font-size: 0.85em;
+      }
+
+      .suspect-name {
+        font-size: 0.85em;
+      }
+
+      .suspect-role {
+        font-size: 0.75em;
+      }
+
+      .panel.chat-window {
+        min-height: 320px;
+      }
+
+      .messages {
+        min-height: 140px;
+        max-height: 300px;
+        font-size: 0.84em;
+        padding: 10px;
+      }
+
+      textarea {
+        min-height: 90px;
+        font-size: 15px;
+        padding: 10px;
+      }
+
+      .actions {
+        gap: 8px;
+      }
+
+      button {
+        font-size: 0.82em;
+        padding: 10px 10px;
+        min-height: 40px;
+      }
+
+      .autopsy-button {
+        font-size: 0.85em;
+        padding: 10px 10px;
+        margin-bottom: 12px;
+      }
+
+      .close-button {
+        width: 40px;
+        height: 40px;
+        min-height: 40px;
+        min-width: 40px;
+        font-size: 1.6em;
+      }
+
+      .status {
+        font-size: 0.75em;
+        padding: 6px 8px;
+      }
+
+      .footer {
+        font-size: 0.75em;
+        margin-top: 12px;
+        padding-top: 10px;
+      }
+
+      .autopsy-content {
+        padding: 16px;
+        font-size: 0.82em;
+        margin-top: 8px;
+      }
+
+      .autopsy-header {
+        font-size: 0.95em;
+        margin-bottom: 12px;
+      }
+
+      .autopsy-stamp {
+        width: 45px;
+        height: 45px;
+        font-size: 0.5em;
+      }
+
+      .message {
+        padding: 8px;
+        margin-bottom: 10px;
+        font-size: 0.84em;
+      }
+
+      .message-label {
+        font-size: 0.75em;
+      }
+
+      /* Verdict modal responsive */
+      .verdict-modal {
+        padding: 10px;
+      }
+
+      .verdict-content {
+        max-width: 100%;
+        padding: 25px 20px;
+        font-size: 0.9em;
+      }
+
+      .verdict-title {
+        font-size: 2em;
+        margin-bottom: 8px;
+      }
+
+      .verdict-subtitle {
+        font-size: 1em;
+      }
+
+      .verdict-body {
+        font-size: 0.88em;
+        line-height: 1.6;
+      }
+
+      .verdict-body p {
+        margin-bottom: 12px;
+      }
+
+      .verdict-stamp {
+        width: 70px;
+        height: 70px;
+        font-size: 0.6em;
+        right: 15px;
+        top: 15px;
+      }
+
+      .verdict-overlay-stamp {
+        font-size: 5em;
+      }
+
+      #restartButton {
+        padding: 12px 24px;
+        font-size: 0.9em;
+      }
+
+      .verdict-button-container {
+        margin-top: 20px;
+      }
+    }
+
+    /* Prevent zoom on input focus (iOS) */
+    textarea,
+    input {
+      font-size: 16px;
+    }
+
+    /* ===== INTRO MODAL STYLES ===== */
+    .intro-modal {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 4000 !important;
+      padding: 10px;
+      justify-content: center;
+      align-items: center;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      animation: introFadeIn 1s ease-in-out;
+    }
+
+    @keyframes introFadeIn {
+      from {
+        opacity: 0;
+        background: rgba(0, 0, 0, 0);
+      }
+      to {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.85);
+      }
+    }
+
+    .intro-modal.fade-out {
+      animation: introFadeOut 0.5s ease-in-out forwards;
+    }
+
+    @keyframes introFadeOut {
+      from {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.85);
+      }
+      to {
+        opacity: 0;
+        background: rgba(0, 0, 0, 0);
+      }
+    }
+
+    .intro-content {
+      background: #fffef0;
+      border: 4px solid #8b4513;
+      max-width: 600px;
+      width: 100%;
+      padding: 40px 30px;
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+      position: relative;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 20px rgba(0, 0, 0, 0.08);
+      border-radius: 0;
+      clip-path: polygon(0 0, 97% 0, 100% 3%, 100% 97%, 97% 100%, 3% 100%, 0 97%);
+      margin: auto;
+    }
+
+    .intro-header {
+      text-align: center;
+      font-size: 1.8em;
+      font-weight: bold;
+      margin-bottom: 15px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #2c1810;
+      position: relative;
+      z-index: 1;
+      font-family: 'Special Elite', 'Courier New', monospace;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+      line-height: 1.2;
+    }
+
+    .intro-separator {
+      border: none;
+      border-top: 2px solid #8b4513;
+      margin: 20px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .intro-body {
+      font-size: 1em;
+      color: #2c1810;
+      margin: 20px 0;
+      text-align: justify;
+      position: relative;
+      z-index: 1;
+      line-height: 1.7;
+    }
+
+    .intro-body p {
+      margin-bottom: 16px;
+    }
+
+    .intro-button-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    #acceptCaseButton {
+      background: #228B22;
+      color: #fffef0;
+      border: 3px solid #006600;
+      padding: 14px 30px;
+      font-size: 1em;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.08em;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    #acceptCaseButton:hover {
+      background: #2ea82e;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    #acceptCaseButton:active {
+      transform: translateY(0);
+    }
+
+    /* ===== VERDICT MODAL STYLES ===== */
+    .verdict-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.98);
+      z-index: 3000 !important;
+      padding: 10px;
+      justify-content: center;
+      align-items: center;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        background: rgba(0, 0, 0, 0);
+      }
+      to {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.98);
+      }
+    }
+
+    .verdict-content {
+      background: #fffef0;
+      border: 4px solid #2c1810;
+      max-width: 600px;
+      width: 100%;
+      padding: 40px 30px;
+      font-family: 'Courier New', 'Special Elite', monospace;
+      line-height: 1.8;
+      position: relative;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 20px rgba(0, 0, 0, 0.08);
+      border-radius: 0;
+      clip-path: polygon(0 0, 97% 0, 100% 3%, 100% 97%, 97% 100%, 3% 100%, 0 97%);
+      margin: auto;
+    }
+
+    .verdict-content.won {
+      border-color: #228B22;
+      background: linear-gradient(135deg, #fffef0 0%, #f0ffe8 100%);
+    }
+
+    .verdict-content.lost {
+      border-color: #8b0000;
+      background: linear-gradient(135deg, #fffef0 0%, #ffe8e8 100%);
+    }
+
+    .verdict-overlay-stamp {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-20deg);
+      font-size: 8em;
+      font-weight: bold;
+      opacity: 0.12;
+      pointer-events: none;
+      text-align: center;
+      z-index: 0;
+      white-space: nowrap;
+    }
+
+    .verdict-stamp {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7em;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
+      transform: rotate(25deg);
+      z-index: 2;
+      box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.3),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.3),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.2);
+      letter-spacing: 0.05em;
+      padding: 5px;
+      line-height: 1.1;
+      color: #fffef0;
+      border: 3px solid #fffef0;
+    }
+
+    .verdict-stamp.won {
+      background: radial-gradient(circle at 30% 30%, #00d700 0%, #00aa00 40%, #006600 90%, #004400 100%);
+    }
+
+    .verdict-stamp.lost {
+      background: radial-gradient(circle at 30% 30%, #ff4444 0%, #cc0000 40%, #8b0000 90%, #660000 100%);
+    }
+
+    .verdict-title {
+      text-align: center;
+      font-size: 2.8em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #2c1810;
+      position: relative;
+      z-index: 1;
+      font-family: 'Special Elite', 'Courier New', monospace;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .verdict-title.won {
+      color: #228B22;
+      text-shadow: 2px 2px 4px rgba(34, 139, 34, 0.2);
+    }
+
+    .verdict-title.lost {
+      color: #8b0000;
+      text-shadow: 2px 2px 4px rgba(139, 0, 0, 0.2);
+    }
+
+    .verdict-subtitle {
+      text-align: center;
+      font-size: 1.2em;
+      color: #654321;
+      margin-bottom: 20px;
+      font-style: italic;
+      letter-spacing: 0.08em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .verdict-separator {
+      border: none;
+      border-top: 2px solid #654321;
+      margin: 20px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .verdict-body {
+      font-size: 1em;
+      color: #2c1810;
+      margin: 20px 0;
+      text-align: justify;
+      position: relative;
+      z-index: 1;
+      line-height: 1.7;
+    }
+
+    .verdict-body p {
+      margin-bottom: 16px;
+    }
+
+    .verdict-signature {
+      margin-top: 30px;
+      text-align: right;
+      position: relative;
+      z-index: 1;
+      font-style: italic;
+    }
+
+    .verdict-signature-line {
+      margin-top: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .verdict-button-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    #restartButton {
+      background: #228B22;
+      color: #fffef0;
+      border: 3px solid #006600;
+      padding: 14px 30px;
+      font-size: 1em;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.08em;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    #restartButton:hover {
+      background: #2ea82e;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    #restartButton:active {
+      transform: translateY(0);
+    }
+
+    .verdict-modal.show {
+      display: flex;
+    }
+
+    /* Screen dim effect before verdict appears */
+    .screen-dim {
+      animation: dimScreen 0.6s ease-in-out;
+    }
+
+    @keyframes dimScreen {
+      from {
+        filter: brightness(1);
+      }
+      to {
+        filter: brightness(0.3);
+      }
+    }
+
+    /* Intro modal responsive */
+    @media (max-width: 768px) {
+      .intro-modal {
+        padding: 10px;
+      }
+
+      .intro-content {
+        max-width: 100%;
+        padding: 25px 20px;
+        font-size: 0.9em;
+      }
+
+      .intro-header {
+        font-size: 1.4em;
+        margin-bottom: 12px;
+      }
+
+      .intro-body {
+        font-size: 0.88em;
+        line-height: 1.6;
+      }
+
+      .intro-body p {
+        margin-bottom: 12px;
+      }
+
+      #acceptCaseButton {
+        padding: 12px 24px;
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="autopsy-modal" id="autopsyModal">
+  <div class="autopsy-content">
+    <button class="close-button" id="closeAutopsy">&times;</button>
+    <div class="autopsy-stamp">PŘÍSNĚ TAJNÉ</div>
+    <div class="autopsy-header">PROTOKOL O OHLEDÁNÍ MRTVOLY</div>
+    <hr>
+    <p><strong>Oběť:</strong> Richard Bohatý (zakladatel RichIT Corp.)</p>
+    <p><strong>Čas úmrtí:</strong> 07. 04. 2026, přibližně 22:15</p>
+    <p><strong>Místo nálezu:</strong> Soukromá knihovna, dveře zajištěny zevnitř (metoda 'zamčeného pokoje').</p>
+    
+    <p><strong>Příčina smrti:</strong> Bodné zranění v oblasti hrudníku. Rána byla vedena s **chirurgickou přesností** přímo mezi žebra. Smrt byla okamžitá.</p>
+    
+    <p><strong>Toxikologický nález:</strong> V krvi oběti nalezena vysoká hladina **silných sedativ**. Richard Bohatý byl v době útoku pravděpodobně v bezvědomí nebo silně omámen.</p>
+    
+    <p><strong>Důkazní předměty na místě:</strong>
+      <ul>
+        <li><strong>Rozbitý šálek:</strong> Zbytek čaje na dně vykazuje stopy neznámé hořké látky (shodné s nalezenými sedativy).</li>
+        <li><strong>Modrá látka:</strong> Drobný útržek **modrého hedvábí** nalezen v křečovitě sevřené levé dlani oběti.</li>
+        <li><strong>Papírový útržek:</strong> Pod tělem nalezen roh roztrhané listiny, na kterém je čitelná částka <strong>15,000,000 Kč</strong> a slovo 'SPLÁTKA'.</li>
+      </ul>
+    </p>
+</div>
+</div>
+
+<!-- VERDICT MODAL -->
+<div class="verdict-modal" id="verdictModal">
+  <div class="verdict-content" id="verdictContent">
+    <div class="verdict-overlay-stamp" id="overlayStamp">VINEN</div>
+    <div class="verdict-stamp won" id="verdictStamp">VINEN</div>
+    <div class="verdict-title won" id="verdictTitle">PŘÍPAD UZAVŘEN</div>
+    <div class="verdict-subtitle" id="verdictSubtitle">Rozsudek Nejvyššího soudu</div>
+    <hr class="verdict-separator">
+    <div class="verdict-body" id="verdictBody">
+      <p id="verdictMainText"></p>
+    </div>
+    <div class="verdict-signature">
+      <p>Vyneseno dne 8. dubna 2026</p>
+      <p class="verdict-signature-line" id="verdictBy">Prezident Nejvyššího soudu</p>
+    </div>
+    <div class="verdict-button-container">
+      <button id="restartButton">🔄 Hrát znovu</button>
+    </div>
+  </div>
+</div>
+
+<!-- INTRO MODAL -->
+<div class="intro-modal" id="introModal">
+  <div class="intro-content">
+    <div class="intro-header">PŘÍPAD Č. 2026-042: VRAŽDA V SÍDLE BOHATÝCH</div>
+    <hr class="intro-separator">
+    <div class="intro-body">
+      <p><strong>Detektive,</strong> dnes v 22:15 byl ve své knihovně nalezen Richard Bohatý. Dveře byly zamčené zevnitř. Na místě jsme zajistili tři osoby, které měly motiv i příležitost: jeho osobního lékaře, jeho milenku a obchodního rivala.</p>
+      <p>Máte pitevní zprávu a plnou moc k výslechu. Najděte vraha dřív, než se mu podaří zahladit stopy.</p>
+    </div>
+    <div class="intro-button-container">
+      <button id="acceptCaseButton">PŘEVZÍT PŘÍPAD</button>
+    </div>
+  </div>
+</div>
+
+  <div class="case-file">
+    <div class="stamp">TOP SECRET</div>
+    <button class="autopsy-button">🔍 Pitevní zpráva</button>
+    <div class="header">
+      <div class="label">Policejní spis</div>
+      <h1>Detektivka</h1>
+      <div class="case-info">
+        <span>Případ č.: 2026-042</span>
+        <span>Datum: 8. dubna 2026</span>
+        <span>Detektiv: Vy</span>
+      </div>
+    </div>
+    <div class="layout">
+      <section class="panel">
+        <div class="suspects-header">
+          <h2>Seznam podezřelých</h2>
+        </div>
+        <div id="suspectList"></div>
+      </section>
+
+      <section class="panel chat-window">
+        <div class="chat-header">
+          <div>
+            <div class="label">Vyšetřovací protokol</div>
+            <div class="selected-suspect" id="selectedSuspect">Vyberte podezřelého vlevo.</div>
+          </div>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div>
+          <textarea id="messageInput" placeholder="Zadejte svou otázku nebo prohlášení..."></textarea>
+          <div class="actions">
+            <button id="sendButton">📝 Zapsat poznámku</button>
+            <button id="accuseButton" style="background: #dc143c; color: white; border-color: #dc143c;">⚖️ Vnést obvinění</button>
+          </div>
+          <div class="status" id="statusText"></div>
+        </div>
+      </section>
+    </div>
+    <div class="footer">
+      "V každém stínu se skrývá pravda. Najděte ji."
+    </div>
+  </div>
+  <script src="/static/script.js"></script>
+</body>
+</html>
