@@ -48,15 +48,21 @@ app.add_middleware(
 )
 
 # Database setup with retry
+
+# Always enforce asyncpg driver in DATABASE_URL
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL must be set")
+if not DATABASE_URL.startswith("postgresql+asyncpg://"):
+    # Try to auto-correct if user forgot the prefix
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 async_engine = None
 async_session = None
 
 async def init_db():
     global async_engine, async_session
+    last_exception = None
     for attempt in range(10):
         try:
             async_engine = create_async_engine(DATABASE_URL, echo=False)
@@ -64,14 +70,14 @@ async def init_db():
             async with async_engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
             print("PostgreSQL is ready!")
-            break
+            return
         except Exception as e:
-            print(f"Database connection attempt {attempt + 1} failed: {e}")
+            last_exception = e
+            print(f"Database connection attempt {attempt + 1} failed: {repr(e)}")
             if attempt < 9:
                 time.sleep(2)
-            else:
-                print("Failed to connect to PostgreSQL after 10 attempts. Exiting.")
-                raise RuntimeError("Failed to connect to database after 10 attempts")
+    print("Failed to connect to PostgreSQL after 10 attempts. Last error:", repr(last_exception))
+    # Do not raise, just log and let FastAPI continue (so logs are visible)
 
 # Run init_db on startup
 @app.on_event("startup")
