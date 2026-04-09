@@ -20,14 +20,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-    volumes:
-      - db_data:/data
-    env:
       - PGDATA=/data/pgdata
     mem_limit: 384m
   cache:
     image: redis:7-alpine
     mem_limit: 384m
-
-volumes:
-  db_data:

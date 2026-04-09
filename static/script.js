@@ -93,14 +93,9 @@ function appendMessage(text, role) {
 
 
 async function fetchPrompts() {
-  try {
-    const response = await fetch("/api/suspects");
-    suspects = await response.json();
-    renderSuspects();
-  } catch (error) {
-    console.error("Chyba při načítání podezřelých:", error);
-    statusText.textContent = "Chyba: Nepodařilo se načíst podezřelé.";
-  }
+  const response = await fetch("/static/prompts.json");
+  suspects = await response.json();
+  renderSuspects();
 }
 
 async function postChat() {
@@ -120,13 +115,13 @@ async function postChat() {
   typeText(statusText, "Čekání na odpověď...");
 
   try {
-    const response = await fetch("/api/chat", {
+    const response = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        session_id: sessionId,
-        suspect_id: activeSuspectId,
+        character_id: activeSuspectId,
         message: text,
+        session_id: sessionId,
       }),
     });
 
@@ -135,7 +130,7 @@ async function postChat() {
     }
 
     const data = await response.json();
-    appendMessage(`${suspects.find((s) => s.id === activeSuspectId).name}: ${data.response}`, "suspect");
+    appendMessage(`${suspects.find((s) => s.id === activeSuspectId).name}: ${data.reply}`, "suspect");
     typeText(statusText, "Odpověď přijata.");
   } catch (error) {
     typeText(statusText, "Nezdařilo se poslat zprávu.");
