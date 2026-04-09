@@ -1,43 +1,33 @@
-version: '3.8'
-
 services:
   app:
     build: .
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - DATABASE_URL=${DATABASE_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
-    environment:
-      - DATABASE_URL=postgresql://student:heslo123@db:5432/detektivka
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://kurim.ithope.eu/v1}
-      - PORT=${PORT:-8000}
     depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - detektivka_net
-
+      - db
+      - cache
+    mem_limit: 384m
   db:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=student
-      - POSTGRES_PASSWORD=heslo123
-      - POSTGRES_DB=detektivka
-      - PGDATA=/data/pgdata
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - pgdata:/data/pgdata
-      - data:/data
-    networks:
-      - detektivka_net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U student -d detektivka"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-networks:
-  detektivka_net:
-    driver: bridge
+      - db_data:/data
+    env:
+      - PGDATA=/data/pgdata
+    mem_limit: 384m
+  cache:
+    image: redis:7-alpine
+    mem_limit: 384m
 
 volumes:
-  pgdata:
-  data:
+  db_data:
