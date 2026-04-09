@@ -1,18 +1,41 @@
+version: '3.8'
+
 services:
   app:
     build: .
-    env_file:
-      - .env
-    environment:
-      - PORT=8000
-      - REDIS_URL=redis://cache:6379/0
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:${PORT:-8000}"
+    environment:
+      - DATABASE_URL=postgresql://student:heslo123@db:5432/detektivka
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://kurim.ithope.eu/v1}
+      - PORT=${PORT:-8000}
     depends_on:
-      - cache
-    mem_limit: 384m
-  cache:
-    image: redis:7-alpine
-    mem_limit: 384m
+      db:
+        condition: service_healthy
+    volumes:
+      - ./data:/data
+    networks:
+      - detektivka_net
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=student
+      - POSTGRES_PASSWORD=heslo123
+      - POSTGRES_DB=detektivka
+      - PGDATA=/data/pgdata
+    volumes:
+      - ./data/pgdata:/data/pgdata
+      - ./data:/data
+    networks:
+      - detektivka_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U student -d detektivka"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  detektivka_net:
+    driver: bridge

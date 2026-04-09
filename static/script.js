@@ -93,9 +93,14 @@ function appendMessage(text, role) {
 
 
 async function fetchPrompts() {
-  const response = await fetch("/static/prompts.json");
-  suspects = await response.json();
-  renderSuspects();
+  try {
+    const response = await fetch("/api/suspects");
+    suspects = await response.json();
+    renderSuspects();
+  } catch (error) {
+    console.error("Chyba při načítání podezřelých:", error);
+    statusText.textContent = "Chyba: Nepodařilo se načíst podezřelé.";
+  }
 }
 
 async function postChat() {
@@ -115,13 +120,13 @@ async function postChat() {
   typeText(statusText, "Čekání na odpověď...");
 
   try {
-    const response = await fetch("/chat", {
+    const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        character_id: activeSuspectId,
-        message: text,
         session_id: sessionId,
+        suspect_id: activeSuspectId,
+        message: text,
       }),
     });
 
@@ -130,7 +135,7 @@ async function postChat() {
     }
 
     const data = await response.json();
-    appendMessage(`${suspects.find((s) => s.id === activeSuspectId).name}: ${data.reply}`, "suspect");
+    appendMessage(`${suspects.find((s) => s.id === activeSuspectId).name}: ${data.response}`, "suspect");
     typeText(statusText, "Odpověď přijata.");
   } catch (error) {
     typeText(statusText, "Nezdařilo se poslat zprávu.");
