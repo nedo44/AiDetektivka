@@ -18,7 +18,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-      - PGDATA=/data/pgdata_vfinal
+      - PGDATA=/data/pgdata_vfinal2
       - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
     mem_limit: 384m
   cache:
