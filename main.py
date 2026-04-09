@@ -63,13 +63,14 @@ async def init_db():
             async_session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
             async with async_engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            print("Database connected successfully")
+            print("PostgreSQL is ready!")
             break
         except Exception as e:
             print(f"Database connection attempt {attempt + 1} failed: {e}")
             if attempt < 9:
                 time.sleep(2)
             else:
+                print("Failed to connect to PostgreSQL after 10 attempts. Exiting.")
                 raise RuntimeError("Failed to connect to database after 10 attempts")
 
 # Run init_db on startup
